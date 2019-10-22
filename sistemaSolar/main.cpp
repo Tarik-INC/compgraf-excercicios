@@ -7,7 +7,8 @@
 #include <vart/contrib/viewerglutogl.h>
 #include <vart/texture.h>
 
-#include <iostream> 
+#include <iostream>
+#include <math.h>
 
 using namespace std;
 using namespace VART;
@@ -15,23 +16,23 @@ using namespace VART;
 class MyIHClass : public VART::ViewerGlutOGL::IdleHandler
 {
 public:
-    MyIHClass() : redRadians(0), greenRadians(0) {}
+    MyIHClass() : terraRadians(0), terraSolRadians(0) {}
     virtual ~MyIHClass() {}
     virtual void OnIdle()
     {
-        redRadians += 0.01;
-        redRotPtr->MakeZRotation(redRadians);
-        greenRadians += 0.01;
-        greenRotPtr->MakeYRotation(greenRadians);
+        terraRadians += 0.05;
+        terraSolRadians += 0.001;
+        terraSolRotPtr->MakeZRotation(terraSolRadians);
+        terraRotPtr->MakeZRotation(terraRadians);
         viewerPtr->PostRedisplay();
     }
     //protected:
-    VART::Transform *redRotPtr;
-    VART::Transform *greenRotPtr;
+    Transform *terraRotPtr;
+    Transform *terraSolRotPtr;
 
 private:
-    float redRadians;
-    float greenRadians;
+    float terraRadians;
+    float terraSolRadians;
 };
 
 int main(int argc, char *argv[])
@@ -43,7 +44,7 @@ int main(int argc, char *argv[])
     ViewerGlutOGL::Init(&argc, argv); //Inicializa a GLUT
     static Scene scene;
     static ViewerGlutOGL viewer;
-    Camera camera(Point4D(0, 0, 6), Point4D(0, 0, 0), Point4D(0, 0, 1, 0));
+    Camera camera(Point4D(0, 0, 20), Point4D(0, 0, 0), Point4D(0, 0, 1, 0));
 
     Sphere terra(0.5);
     Texture terraTex;
@@ -66,24 +67,30 @@ int main(int argc, char *argv[])
     sol.SetMaterial(solMat);
     terra.SetMaterial(terraMat);
 
+
     Transform terraTranslat;
     Transform terraRot;
-    Transform solRot;
-    cout << "Foi ate aqui";
+    Transform terraSolRot;
+    terraTranslat.MakeTranslation(4.0, 0, 0);
+    terraRot.AddChild(terra);
+    terraTranslat.AddChild(terraRot);
+    terraSolRot.AddChild(terraTranslat);
+    
 
-    terraTranslat.MakeTranslation(4, 0, 0);
-    terraTranslat.AddChild(terra);
-    terraRot.AddChild(terraTranslat);
-
-    scene.AddObject(&terraTranslat);
+    scene.AddObject(&terraSolRot);
+    // scene.AddObject(&terraTranslat);
     scene.AddObject(&sol);
     scene.AddCamera(&camera);
     scene.AddLight(Light::BRIGHT_AMBIENT());
+    scene.MakeCameraViewAll();
+
     MyIHClass idleHandler;
+    idleHandler.terraRotPtr = &terraRot;
+    idleHandler.terraSolRotPtr = &terraSolRot;
 
     viewer.SetTitle("Sistema Solar");
     viewer.SetScene(scene);
-    // viewer.SetIdleHandler(&idleHandler);
+    viewer.SetIdleHandler(&idleHandler);
 
     scene.DrawLightsOGL();
     ViewerGlutOGL::MainLoop();
