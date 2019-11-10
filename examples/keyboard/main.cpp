@@ -142,7 +142,7 @@ int main(int argc, char* argv[])
     MyIHClass idh;
     idh.translPtr = &sphereTrans;
     viewer.SetIdleHandler(&idh);
-
+    
     // Run application
     scene.DrawLightsOGL(); // Set OpenGL's lights' state
     ViewerGlutOGL::MainLoop(); // Enter main loop (event loop)

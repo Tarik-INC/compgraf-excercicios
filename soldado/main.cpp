@@ -77,8 +77,12 @@ private:
 
 class MyIHClass : public VART::ViewerGlutOGL::IdleHandler
 {
+#include <vart/transform.h>
+
 public:
-    MyIHClass() : soldadoTranslatPtr(NULL), soldadoRotPtr(NULL), radians(0) {}
+    MyIHClass() : soldadoTranslatPtr(NULL), soldadoRotPtr(NULL), radians(0)
+    {
+    }
     virtual ~MyIHClass() {}
     virtual void OnIdle()
     {
@@ -94,6 +98,7 @@ public:
             soldadoTranslatPtr->MakeTranslation(soldadoPos + Point4D(0, 0, -0.1));
             keyIsPressed = true;
         }
+
         if(keyPressed[LEFT]) {
             radians += 0.01;
             soldadoTranslatPtr->MakeYRotation(radians);
