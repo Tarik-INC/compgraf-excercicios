@@ -5,6 +5,7 @@
 #include <iostream>
 #include <iomanip>
 #include <fstream>
+#include <math.h>
 
 using namespace std;
 
@@ -179,9 +180,49 @@ void BigPixelCanvas::DrawCircle(wxPoint center, int radius)
 
 void BigPixelCanvas::DrawCircle(const wxPoint &center, int radius, wxDC &dc)
 {
-// Aqui o codigo para desenhar um circulo.
-// Para desenhar um pixel, use "DrawPixel(x, y, dc)".
-#warning BigPixelCanvas::DrawCircle não foi implementado (necessário para rasterização de círculos).
+    // Aqui o codigo para desenhar um circulo.
+    // Para desenhar um pixel, use "DrawPixel(x, y, dc)".
+    for (int r = radius-6; r < radius; r+= 3)
+    {
+
+        // int r = radius;
+        int decision = 1 - r;
+        int y = r;
+        int x = 0;
+
+        int limit = sin(M_PI / 4) * r;
+
+        DrawPixel(center.x, center.y + r, dc);
+        DrawPixel(center.x, center.y, dc);
+        DrawPixel(center.x + r, center.y, dc);
+        DrawPixel(center.x - r, center.y, dc);
+        DrawPixel(center.x, center.y - r, dc);
+
+        while (y > limit)
+        {
+            int eastVariation = 2 * x + 3;
+            int southeastVariation = 2 * x - 2 * y + 5;
+            if (decision < 0)
+            {
+                decision += eastVariation;
+            }
+            else
+            {
+                decision += southeastVariation;
+                y--;
+            }
+            x++;
+
+            DrawPixel(center.x + x, center.y + y, dc);
+            DrawPixel(center.x + y, center.y + x, dc);
+            DrawPixel(center.x + y, center.y - x, dc);
+            DrawPixel(center.x + x, center.y - y, dc);
+            DrawPixel(center.x - x, center.y - y, dc);
+            DrawPixel(center.x - y, center.y - x, dc);
+            DrawPixel(center.x - y, center.y + x, dc);
+            DrawPixel(center.x - x, center.y + y, dc);
+        }
+    }
 }
 
 void BigPixelCanvas::DesenharTriangulo2D(const Triang2D &triangulo)
