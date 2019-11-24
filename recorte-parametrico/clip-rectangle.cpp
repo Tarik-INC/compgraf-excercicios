@@ -4,9 +4,10 @@
 
 using namespace std;
 
-ClipRectangle::ClipRectangle (double xmin, double xmax, double ymin, double ymax)
+ClipRectangle::ClipRectangle(double xmin, double xmax, double ymin, double ymax)
     : mXmin(xmin), mXmax(xmax), mYmin(ymin), mYmax(ymax), mInitialized(true)
-{}
+{
+}
 
 void ClipRectangle::Set(double xmin, double xmax, double ymin, double ymax)
 {
@@ -20,9 +21,9 @@ void ClipRectangle::Set(double xmin, double xmax, double ymin, double ymax)
 // Retorna um ponteiro para uma linha recem alocada inteiramente dentro da area de recorte
 // ou NULL se l for completamente descartada.
 // A linha alocada aqui será desalocada na função CleanUp().
-Line* ClipRectangle::Clip(const Line& l){
-	
-	
+Line *ClipRectangle::Clip(const Line &l)
+{
+
     double posInicio = 0;
     double posFim = 1;
     Point p0 = l.mP0;
@@ -30,8 +31,8 @@ Line* ClipRectangle::Clip(const Line& l){
 
     // double numerador[4] = {mXmin - l.mP0.mX, l.mP0.mX - mXmax, l.mP0.mY - mYmax, mYmin - l.mP0.mY};
     // double denominador[4] = {l.mP1.mX - l.mP0.mX, l.mP0.mX - l.mP1.mX, l.mP0.mY - l.mP1.mY, l.mP1.mY - l.mP0.mY};
-   double numerador;
-   double denominador;
+    double numerador;
+    double denominador;
     double paramT = 0;
 
     for (int i = 0; i < 4; i++)
@@ -46,7 +47,7 @@ Line* ClipRectangle::Clip(const Line& l){
             numerador = p0.mX - mXmax;
             denominador = p0.mX - p1.mX;
             break;
-        case 2: 
+        case 2:
             numerador = p0.mY - mYmax;
             denominador = p0.mY - p1.mY;
             break;
@@ -66,45 +67,41 @@ Line* ClipRectangle::Clip(const Line& l){
                 return NULL;
             }
         }
+
+        paramT = numerador / denominador;
+
+        if (denominador > 0)
+        {
+            // potencialmente entrando
+            if (paramT > posFim)
+            {
+                return NULL;
+            }
+            {
+            if (paramT > posInicio)
+                posInicio = paramT;
+            }
+        }
         else
         {
+            // potencialmente saindo
 
-            paramT = numerador / denominador;
-
-            if (denominador > 0)
+            if (paramT < posInicio)
             {
-                // potencialmente entrando
-                if (paramT > posFim)
-                {
-                    return NULL;
-                }
-                if (paramT > posInicio)
-                {
-                    posInicio = paramT;
-                }
+                return NULL;
             }
-            else
+            if (paramT < posFim)
             {
-                // potencialmente saindo
-
-                if (paramT < posInicio)
-                {
-                    return NULL;
-                }
-                if (paramT < posFim)
-                {
-                    posFim = paramT;
-                }
+                posFim = paramT;
             }
         }
     }
 
- 
     return new Line(l.Coordinates(posInicio), l.Coordinates(posFim));
     //    #error ClipRectangle::Clip não foi implementada.
 }
 
-void ClipRectangle::Read(const string& prompt)
+void ClipRectangle::Read(const string &prompt)
 {
     cout << prompt;
     cin >> mXmin >> mXmax >> mYmin >> mYmax;
@@ -112,10 +109,8 @@ void ClipRectangle::Read(const string& prompt)
         mInitialized = true;
 }
 
-ostream& operator << (ostream& os, const ClipRectangle& r)
+ostream &operator<<(ostream &os, const ClipRectangle &r)
 {
-    return os << "(Clipping Rectangle: " << r.mXmin << ", " << r.mXmax << ", " 
+    return os << "(Clipping Rectangle: " << r.mXmin << ", " << r.mXmax << ", "
               << r.mYmin << ", " << r.mYmax << ")";
 }
-
-
