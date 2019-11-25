@@ -190,7 +190,7 @@ void BigPixelCanvas::DrawCircle(const wxPoint &center, int radius, wxDC &dc)
         int y = r;
         int x = 0;
 
-        int limit = sin(M_PI / 4) * r;
+        int limit = round(sin(M_PI / 4) * r);
 
         DrawPixel(center.x, center.y + r, dc);
         DrawPixel(center.x, center.y, dc);
@@ -198,10 +198,12 @@ void BigPixelCanvas::DrawCircle(const wxPoint &center, int radius, wxDC &dc)
         DrawPixel(center.x - r, center.y, dc);
         DrawPixel(center.x, center.y - r, dc);
 
+        int eastVariation = 0;
+        int southeastVariation = 0;
         while (y > limit)
         {
-            int eastVariation = 2 * x + 3;
-            int southeastVariation = 2 * x - 2 * y + 5;
+            eastVariation = 2 * x + 3;
+            southeastVariation = 2 * x - 2 * y + 5;
             if (decision < 0)
             {
                 decision += eastVariation;
@@ -234,10 +236,87 @@ void BigPixelCanvas::DesenharTriangulo2D(const Triang2D &triangulo)
 
 void BigPixelCanvas::DesenharTriangulo2D(const Triang2D &triangulo, wxDC &dc)
 {
-    Interv2D intervalo;
-    while (triangulo.AtualizarIntervaloHorizontal(&intervalo))
-        if (intervalo.Valido())
-            DesenharIntervaloHorizontal(intervalo, dc);
+   Ponto p0 = triangulo.P1();
+   Ponto p1 = triangulo.P2();
+   Ponto p2 = triangulo.P3();
+
+   int distanceYP0P1 = abs(p0.mY - p1.mY);
+   int distanceYP0P2=  abs(p0.mY - p2.mY);
+   int distanceYP1P2 = abs(p2.mY - p1.mY);
+
+   int longEdgeDistance = distanceYP0P1;
+   Ponto longEdgeP0 = p0;
+   Ponto longEdgeP1 = p1;
+   Ponto notInLongEdge = p2;
+
+   if(distanceYP0P2 > longEdgeDistance) {
+       longEdgeDistance = distanceYP0P2;
+       longEdgeP0 = p1;
+       longEdgeP1 = p2;
+       notInLongEdge = p1;
+   }
+   if(distanceYP1P2 > longEdgeDistance) {
+       longEdgeDistance = distanceYP1P2;
+       longEdgeP0 = p1;
+       longEdgeP1 = p2;
+       notInLongEdge = p0;
+   }
+
+   if(longEdgeP0.mY > longEdgeP1.mY) {
+       Ponto aux = longEdgeP0;
+       longEdgeP0 = longEdgeP1;
+       longEdgeP1 = aux;
+   }
+
+   int minY = longEdgeP0.mY;
+   int maxY = notInLongEdge.mY;
+   float leftLimitX = float(longEdgeP0.mX);
+   float rightLimitX = leftLimitX;
+   float leftVariationX;
+   float rightVariationX;
+   bool inLeft = true;
+
+    //Vertice que sobrou esta a esquerda da aresta longa
+    if(notInLongEdge.mX - longEdgeP0.mX < 0) {
+        // Calculo da variacao relativa (coeficiente)
+        // De x( right e left limit ate as extremidades)
+        rightVariationX =  float(longEdgeP1.mX - longEdgeP0.mX )/(longEdgeP1.mY - longEdgeP0.mY);
+        leftVariationX = float(notInLongEdge.mX - longEdgeP0.mX) / (notInLongEdge.mY - longEdgeP0.mY);
+    } else {
+        rightVariationX = float(notInLongEdge.mX - longEdgeP0.mX) / (notInLongEdge.mY - longEdgeP1.mY);
+        leftVariationX = float(longEdgeP1.mX - longEdgeP0.mX) / (longEdgeP1.mY - longEdgeP0.mY);
+        inLeft = false;
+    }
+
+    int y = minY;
+    while (y < maxY) {
+        for(int x  = leftLimitX; x < rightLimitX; x ++) {
+            DrawPixel(x, y, dc);
+        }
+        leftLimitX += leftVariationX;
+        rightLimitX += rightVariationX;
+        y ++;
+    }
+
+    minY = maxY;
+    maxY = longEdgeP1.mY;
+
+    if(inLeft) {
+        leftVariationX = float(longEdgeP1.mX - notInLongEdge.mX) / (longEdgeP1.mY - notInLongEdge.mY);
+    } else {
+        rightVariationX = float(longEdgeP1.mX - notInLongEdge.mX) / (longEdgeP1.mY - notInLongEdge.mY);
+    }
+
+    while (y < maxY)
+    {
+        for (int x = leftLimitX; x < rightLimitX; x++)
+        {
+            DrawPixel(x, y, dc);
+        }
+        leftLimitX += leftVariationX;
+        rightLimitX += rightVariationX;
+        y++;
+    }
 }
 
 void BigPixelCanvas::DesenharTriangulo3D(const Triang3D &triangulo, wxDC &dc)
